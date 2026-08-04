@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>IRON LOG — Workout Journal</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#16171a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Iron Log">
+<link rel="icon" href="icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -759,7 +770,10 @@
       <h1 class="brand"><span class="plate"></span>Iron Log</h1>
       <div class="tagline">A training ledger — logged, not lost</div>
     </div>
-    <button type="button" class="icon-btn" id="settingsBtn" aria-label="Sync settings" style="font-size:20px; flex-shrink:0;">⚙</button>
+    <div style="display:flex; gap:4px; flex-shrink:0;">
+      <button type="button" class="icon-btn" id="installBtn" aria-label="Install app" style="font-size:18px; display:none;">⤓</button>
+      <button type="button" class="icon-btn" id="settingsBtn" aria-label="Sync settings" style="font-size:20px;">⚙</button>
+    </div>
   </div>
   <div id="syncStatus" class="sync-status"></div>
 </header>
@@ -1693,6 +1707,37 @@
   } else {
     showGate();
   }
+
+  // ---------- PWA: service worker + install prompt ----------
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch((e) => {
+        console.error('Service worker registration failed:', e);
+      });
+    });
+  }
+
+  const installBtn = document.getElementById('installBtn');
+  let deferredInstallPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installBtn.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.style.display = 'none';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
 })();
 </script>
 </body>
