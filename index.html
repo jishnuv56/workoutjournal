@@ -532,6 +532,135 @@
 
   #appShell{display:none;}
 
+  /* ---------- performance analysis ---------- */
+  .perf-subhead{
+    font-family:'Oswald',sans-serif;
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin:0 0 4px;
+    color:var(--chalk);
+  }
+  .perf-note{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--chalk-dim);
+    margin-bottom:14px;
+  }
+  .perf-empty{
+    text-align:center;
+    padding:28px 10px;
+    color:var(--chalk-dim);
+    font-size:13px;
+    border:1px dashed var(--line);
+    border-radius:6px;
+  }
+
+  #perfChartWrap svg{width:100%; height:auto; display:block;}
+  .perf-point{cursor:pointer;}
+  .perf-point-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    fill:var(--chalk-dim);
+  }
+  .perf-stat-row{
+    display:flex;
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    margin-top:14px;
+  }
+  .perf-stat{
+    flex:1;
+    background:var(--surface-2);
+    padding:10px 8px;
+    text-align:center;
+  }
+  .perf-stat .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px;
+    font-weight:600;
+    color:var(--rust-bright);
+    display:block;
+  }
+  .perf-stat .label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--chalk-dim);
+    display:block;
+    margin-top:2px;
+  }
+
+  .muscle-bar-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .muscle-bar-row:last-child{margin-bottom:0;}
+  .muscle-bar-label{
+    font-size:12px;
+    color:var(--chalk-dim);
+    width:78px;
+    flex-shrink:0;
+  }
+  .muscle-bar-track{
+    flex:1;
+    height:12px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .muscle-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--rust), var(--rust-bright));
+    border-radius:4px 0 0 4px;
+  }
+  .muscle-bar-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--chalk-dim);
+    width:28px;
+    text-align:right;
+    flex-shrink:0;
+  }
+
+  .volume-chart{
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+    height:120px;
+    padding-top:8px;
+  }
+  .volume-bar-col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    height:100%;
+    justify-content:flex-end;
+    min-width:0;
+  }
+  .volume-bar{
+    width:100%;
+    max-width:26px;
+    background:var(--rust);
+    border-radius:3px 3px 0 0;
+    min-height:2px;
+  }
+  .volume-bar.current{background:var(--rust-bright);}
+  .volume-bar-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    color:var(--chalk-dim);
+    margin-top:6px;
+    white-space:nowrap;
+  }
+
   /* ---------- mobile breakpoint ---------- */
   @media (max-width: 480px){
     header{padding:20px 14px 16px;}
@@ -560,6 +689,11 @@
     .login-card{padding:22px 18px;}
 
     .brand{gap:8px;}
+
+    .muscle-bar-label{width:60px; font-size:11px;}
+    .volume-chart{height:100px;}
+    .volume-bar-label{font-size:8px;}
+    .perf-stat .num{font-size:14px;}
   }
 
   @media (max-width: 360px){
@@ -694,6 +828,29 @@
 
     <button type="button" class="btn-line" id="addExerciseBtn">+ Add exercise</button>
     <button type="button" class="btn-primary" id="saveEntryBtn">Log session</button>
+  </section>
+
+  <div class="ledger-heading"><h2>Performance</h2></div>
+
+  <section class="card">
+    <h2 class="perf-subhead">Exercise progress</h2>
+    <div class="field">
+      <label for="perfExerciseSelect">Exercise</label>
+      <select id="perfExerciseSelect"></select>
+    </div>
+    <div id="perfChartWrap"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="perf-subhead">Muscle group balance</h2>
+    <div class="perf-note">Sets logged, all time</div>
+    <div id="muscleBarsWrap"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="perf-subhead">Weekly volume</h2>
+    <div class="perf-note">Weight × reps, last 10 weeks</div>
+    <div id="volumeChartWrap"></div>
   </section>
 
   <div class="ledger-heading"><h2>History</h2></div>
@@ -847,6 +1004,7 @@
       renderConnectedStatus(`last pulled ${new Date().toLocaleTimeString()}`);
       renderStats();
       renderHistory();
+      renderPerformance();
     }catch(e){
       console.error(e);
       setStatus('err', `Couldn't reach GitHub — showing data saved on this device. <button type="button" class="link-btn" id="retrySyncLink">Retry</button>`);
@@ -875,6 +1033,7 @@
       ghSyncing = false;
       renderStats();
       renderHistory();
+      renderPerformance();
     }
   }
 
@@ -953,6 +1112,7 @@
       renderConnectedStatus(remote.exists ? 'existing data loaded' : 'ready — first save will create the file');
       renderStats();
       renderHistory();
+      renderPerformance();
     }catch(e){
       console.error(e);
       note.className = 'login-note err';
@@ -1012,6 +1172,7 @@
       renderConnectedStatus();
       renderStats();
       renderHistory();
+      renderPerformance();
       setTimeout(closeSettings, 900);
     }catch(e){
       console.error(e);
@@ -1213,6 +1374,7 @@
 
     renderStats();
     renderHistory();
+    renderPerformance();
   });
 
   // ---------- stats ----------
@@ -1313,6 +1475,7 @@
           saveWorkouts(workouts, `Delete session — ${w.date}`);
           renderStats();
           renderHistory();
+          renderPerformance();
         }
       });
       body.appendChild(actions);
@@ -1331,8 +1494,197 @@
     return div.innerHTML;
   }
 
+  // ---------- performance analysis ----------
+  const perfExerciseSelect = document.getElementById('perfExerciseSelect');
+  const perfChartWrap = document.getElementById('perfChartWrap');
+  const muscleBarsWrap = document.getElementById('muscleBarsWrap');
+  const volumeChartWrap = document.getElementById('volumeChartWrap');
+
+  // All distinct exercise names ever logged, each tagged with its most recent category.
+  function getKnownExercises(){
+    const map = new Map(); // key: lowercase name -> {name, category, lastDate}
+    workouts.forEach(w => {
+      w.exercises.forEach(ex => {
+        const key = ex.name.trim().toLowerCase();
+        const existing = map.get(key);
+        if(!existing || w.date > existing.lastDate){
+          map.set(key, { name: ex.name, category: ex.category || 'Other', lastDate: w.date });
+        }
+      });
+    });
+    return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));
+  }
+
+  // Chronological {date, topWeight, topReps, isPR} points for one exercise (matched case-insensitively).
+  function computeExerciseSeries(name){
+    const key = name.trim().toLowerCase();
+    const byDate = new Map();
+    workouts.forEach(w => {
+      w.exercises.forEach(ex => {
+        if(ex.name.trim().toLowerCase() !== key) return;
+        let topWeight = 0, topReps = 0;
+        ex.sets.forEach(s => {
+          if(s.weight > topWeight){ topWeight = s.weight; topReps = s.reps; }
+          else if(s.weight === topWeight && s.reps > topReps){ topReps = s.reps; }
+        });
+        const prev = byDate.get(w.date);
+        if(!prev || topWeight > prev.topWeight || (topWeight === prev.topWeight && topReps > prev.topReps)){
+          byDate.set(w.date, { date: w.date, topWeight, topReps });
+        }
+      });
+    });
+    const points = Array.from(byDate.values()).sort((a,b) => a.date.localeCompare(b.date));
+    let runningBest = 0;
+    points.forEach(p => {
+      p.isPR = p.topWeight > 0 && p.topWeight >= runningBest;
+      runningBest = Math.max(runningBest, p.topWeight);
+    });
+    return points;
+  }
+
+  function renderExerciseChart(){
+    const known = getKnownExercises();
+    const prevSelected = perfExerciseSelect.value;
+    perfExerciseSelect.innerHTML = known.map(k => `<option value="${escapeHTML(k.name)}">${escapeHTML(k.name)}</option>`).join('');
+
+    if(!known.length){
+      perfChartWrap.innerHTML = '<div class="perf-empty">Log a session to see progress charts here.</div>';
+      return;
+    }
+    if(known.some(k => k.name === prevSelected)) perfExerciseSelect.value = prevSelected;
+    const selectedName = perfExerciseSelect.value;
+    const points = computeExerciseSeries(selectedName);
+
+    if(points.length < 2){
+      perfChartWrap.innerHTML = `<div class="perf-empty">Log ${selectedName} at least twice to chart a trend.</div>`;
+      return;
+    }
+
+    const bodyweightMode = points.every(p => p.topWeight === 0);
+    const values = points.map(p => bodyweightMode ? p.topReps : p.topWeight);
+    const maxV = Math.max(...values);
+    const minV = Math.min(...values, 0);
+    const range = (maxV - minV) || 1;
+
+    const W = 600, H = 200, padL = 34, padR = 14, padT = 16, padB = 28;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+
+    const xFor = (i) => padL + (points.length === 1 ? plotW/2 : (i/(points.length-1)) * plotW);
+    const yFor = (v) => padT + plotH - ((v - minV)/range) * plotH;
+
+    const linePts = points.map((p,i) => `${xFor(i)},${yFor(bodyweightMode ? p.topReps : p.topWeight)}`).join(' ');
+
+    const gridLines = [0,0.5,1].map(f => {
+      const y = padT + plotH * f;
+      const val = Math.round(maxV - f * (maxV - minV));
+      return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--line)" stroke-width="1"/>
+              <text x="${padL-6}" y="${y+3}" text-anchor="end" class="perf-point-label">${val}</text>`;
+    }).join('');
+
+    const dots = points.map((p,i) => {
+      const v = bodyweightMode ? p.topReps : p.topWeight;
+      const x = xFor(i), y = yFor(v);
+      const r = p.isPR ? 5 : 3.5;
+      const fill = p.isPR ? 'var(--rust-bright)' : 'var(--steel)';
+      const title = bodyweightMode
+        ? `${prettyDate(p.date)}: ${p.topReps} reps${p.isPR ? ' (PR)' : ''}`
+        : `${prettyDate(p.date)}: ${p.topWeight}×${p.topReps}${p.isPR ? ' (PR)' : ''}`;
+      return `<circle class="perf-point" cx="${x}" cy="${y}" r="${r}" fill="${fill}"><title>${escapeHTML(title)}</title></circle>`;
+    }).join('');
+
+    // Show at most ~6 date labels along the x-axis to avoid crowding.
+    const labelStep = Math.max(1, Math.ceil(points.length / 6));
+    const xLabels = points.map((p,i) => {
+      if(i % labelStep !== 0 && i !== points.length-1) return '';
+      return `<text x="${xFor(i)}" y="${H-8}" text-anchor="middle" class="perf-point-label">${new Date(p.date+'T00:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'})}</text>`;
+    }).join('');
+
+    perfChartWrap.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        ${gridLines}
+        <polyline points="${linePts}" fill="none" stroke="var(--rust-bright)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${dots}
+        ${xLabels}
+      </svg>
+      <div class="perf-stat-row">
+        <div class="perf-stat"><span class="num">${maxV}</span><span class="label">Best ${bodyweightMode ? 'reps' : 'weight'}</span></div>
+        <div class="perf-stat"><span class="num">${points.length}</span><span class="label">Sessions logged</span></div>
+        <div class="perf-stat"><span class="num">${points.filter(p=>p.isPR).length}</span><span class="label">PRs hit</span></div>
+      </div>
+    `;
+  }
+
+  function renderMuscleBalance(){
+    const counts = {};
+    workouts.forEach(w => {
+      w.exercises.forEach(ex => {
+        const cat = ex.category || 'Other';
+        counts[cat] = (counts[cat] || 0) + ex.sets.length;
+      });
+    });
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    if(!entries.length){
+      muscleBarsWrap.innerHTML = '<div class="perf-empty">No sets logged yet.</div>';
+      return;
+    }
+    const max = entries[0][1];
+    muscleBarsWrap.innerHTML = entries.map(([cat,count]) => `
+      <div class="muscle-bar-row">
+        <span class="muscle-bar-label">${escapeHTML(cat)}</span>
+        <span class="muscle-bar-track"><span class="muscle-bar-fill" style="width:${Math.max(4,(count/max)*100)}%"></span></span>
+        <span class="muscle-bar-count">${count}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderVolumeChart(){
+    // Build the last 10 ISO week buckets ending with the current week.
+    const weeks = [];
+    let cursor = new Date(isoWeekKey(todayISO()) + 'T00:00:00');
+    for(let i=0;i<10;i++){
+      weeks.unshift(cursor.toISOString().slice(0,10));
+      cursor.setDate(cursor.getDate()-7);
+    }
+    const totals = {};
+    weeks.forEach(wk => totals[wk] = 0);
+    workouts.forEach(w => {
+      const wk = isoWeekKey(w.date);
+      if(!(wk in totals)) return;
+      const vol = w.exercises.reduce((sum,ex) => sum + ex.sets.reduce((s,st) => s + (st.weight*st.reps), 0), 0);
+      totals[wk] += vol;
+    });
+    const max = Math.max(...weeks.map(wk => totals[wk]), 1);
+    const currentWeek = isoWeekKey(todayISO());
+
+    if(weeks.every(wk => totals[wk] === 0)){
+      volumeChartWrap.innerHTML = '<div class="perf-empty">No volume logged in the last 10 weeks yet.</div>';
+      return;
+    }
+
+    volumeChartWrap.innerHTML = `<div class="volume-chart">${
+      weeks.map(wk => {
+        const v = totals[wk];
+        const pct = Math.max(2, (v/max)*100);
+        const label = new Date(wk+'T00:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'});
+        return `<div class="volume-bar-col">
+          <div class="volume-bar ${wk===currentWeek ? 'current' : ''}" style="height:${pct}%" title="${escapeHTML(label)}: ${v.toLocaleString()} vol"></div>
+          <span class="volume-bar-label">${label}</span>
+        </div>`;
+      }).join('')
+    }</div>`;
+  }
+
+  function renderPerformance(){
+    renderExerciseChart();
+    renderMuscleBalance();
+    renderVolumeChart();
+  }
+
+  perfExerciseSelect.addEventListener('change', renderExerciseChart);
+
   renderStats();
   renderHistory();
+  renderPerformance();
 
   if(ghConfigured()){
     showApp();
