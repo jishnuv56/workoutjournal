@@ -141,10 +141,10 @@
     background:var(--surface-2);
     border:1px solid var(--line);
     color:var(--chalk);
-    padding:9px 10px;
+    padding:11px 10px;
     border-radius:5px;
     font-family:'Inter',sans-serif;
-    font-size:14px;
+    font-size:16px;
   }
   select{
     appearance:none;
@@ -172,7 +172,8 @@
   .exercise-block .ex-top .ex-category{flex:0 0 34%; padding-right:24px;}
   .exercise-block .ex-top .ex-name{flex:1; padding-right:24px;}
   .exercise-block .ex-top .remove-ex{flex:0 0 auto;}
-  .set-row{display:grid; grid-template-columns:32px 1fr 1fr 32px; gap:8px; align-items:center; margin-bottom:6px;}
+  .set-row{display:grid; grid-template-columns:24px 1fr 1fr 40px; gap:6px; align-items:center; margin-bottom:6px;}
+  .set-row .remove-set{width:40px; height:40px;}
   .set-row .set-idx{
     font-family:'IBM Plex Mono',monospace;
     color:var(--chalk-dim);
@@ -188,9 +189,10 @@
   .icon-btn{
     background:transparent;
     color:var(--chalk-dim);
-    font-size:16px;
-    width:32px;height:32px;
+    font-size:18px;
+    width:40px;height:40px;
     display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .icon-btn:hover{color:var(--rust-bright);}
   .btn-line{
@@ -200,14 +202,17 @@
     font-size:12px;
     text-transform:uppercase;
     letter-spacing:0.05em;
-    padding:8px;
+    padding:11px 8px;
     width:100%;
     border-radius:5px;
     margin-bottom:8px;
+    min-height:44px;
   }
   .btn-line:hover{border-color:var(--steel); color:var(--chalk);}
   .remove-ex{
-    background:transparent;color:var(--chalk-dim); font-size:16px; padding:0 4px;
+    background:transparent;color:var(--chalk-dim); font-size:18px;
+    width:40px; height:40px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
   }
   .remove-ex:hover{color:var(--rust-bright);}
 
@@ -216,11 +221,12 @@
     color:#fff8f3;
     font-weight:600;
     font-size:14px;
-    padding:12px;
+    padding:14px 12px;
     width:100%;
     letter-spacing:0.03em;
     text-transform:uppercase;
     margin-top:6px;
+    min-height:44px;
   }
   .btn-primary:hover{background:var(--rust-bright);}
 
@@ -525,6 +531,42 @@
   .login-note.busy{color:var(--steel);}
 
   #appShell{display:none;}
+
+  /* ---------- mobile breakpoint ---------- */
+  @media (max-width: 480px){
+    header{padding:20px 14px 16px;}
+    main{padding:14px;}
+    .card{padding:14px;}
+    .stats{margin:16px 14px 0;}
+    .stat{padding:10px 6px;}
+    .stat .num{font-size:19px;}
+    .stat .label{font-size:9px;}
+
+    .row2{grid-template-columns:1fr; gap:12px;}
+
+    .exercise-block .ex-top{flex-wrap:wrap;}
+    .exercise-block .ex-top .ex-category{flex:1 1 100%; padding-right:28px;}
+    .exercise-block .ex-top .ex-name{flex:1 1 100%; padding-right:28px;}
+    .exercise-block .ex-top .remove-ex{margin-left:auto;}
+
+    .set-row{grid-template-columns:20px 1fr 1fr 36px; gap:5px;}
+    .set-row .remove-set{width:36px; height:36px;}
+
+    .entry-head{flex-wrap:wrap; row-gap:4px;}
+    .entry-summary{font-size:11px;}
+    .entry-date{font-size:12px;}
+
+    .settings-panel{padding:16px; margin-top:16px;}
+    .login-card{padding:22px 18px;}
+
+    .brand{gap:8px;}
+  }
+
+  @media (max-width: 360px){
+    .stats{grid-template-columns:repeat(3,1fr);}
+    .stat .num{font-size:16px;}
+    .entry-summary{display:none;}
+  }
 </style>
 </head>
 <body>
